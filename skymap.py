@@ -37,17 +37,18 @@ if __name__ == '__main__':
     #for pt in pts:
     #    print(cart2sphA(pt))
 
-    # Create a grid of positions on a unit circle
-    phis, thetas = np.mgrid[0:180:3j, 0:360:6j] # outputs are reversed rel to args
+    # Create a grid of positions on a unit sphere
+    phis, thetas = np.mgrid[0:180:300j, 0:360:600j] # outputs are reversed rel to args
     rs = np.full_like(thetas, 1)
 
     # convert to cartesian coords
     phis = np.radians(phis)
     thetas = np.radians(thetas)
     xs, ys, zs = sph2cart(phis, thetas, rs)
+    zs = np.abs(zs)
 
-    rands = np.random.randn(*rs.shape)
-    zz = np.sqrt(phis**2 + thetas**2)
+    #rands = np.random.randn(*rs.shape)
+    #zz = np.sqrt(phis**2 + thetas**2)
 
     #h = plt.contourf(phis, thetas, zz)
     h = plt.contourf(xs, ys, zs)
