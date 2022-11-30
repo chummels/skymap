@@ -28,8 +28,31 @@ def cart2sph(x, y, z):
 def cart2sphA(a):
     return cart2sph(a[0], a[1], a[2])
 
+def DM_ray():
+    pass
+
 if __name__ == '__main__':
-    pts = np.array([[1,0,0], [0,1,0], [0,0,1]])
-    print(appendSpherical_np(pts))
-    for pt in pts:
-        print(cart2sphA(pt))
+    #pts = np.array([[1,0,0], [0,1,0], [0,0,1]])
+    #print(appendSpherical_np(pts))
+    #for pt in pts:
+    #    print(cart2sphA(pt))
+
+    # Create an array of all positions on a unit circle at 1 square degree spacing
+    phis, thetas = np.mgrid[0:180:30j, 0:360:60j]
+    rs = np.full_like(thetas, 1)
+    phis = np.radians(phis)
+    thetas = np.radians(thetas)
+    carts = sph2cart(phis, thetas, rs)
+    rands = np.random.randn(*rs.shape)
+    zz = np.sqrt(phis**2 + thetas**2)
+    h = plt.contourf(phis, thetas, zz)
+    plt.axis('scaled')
+    plt.colorbar()
+    plt.savefig('test.png')
+    #import pdb; pdb.set_trace()
+
+    #phis = phis.ravel()
+    #thetas = thetas.ravel()
+    #rs = rs.ravel()
+
+    
