@@ -40,7 +40,7 @@ if __name__ == '__main__':
     #    print(cart2sphA(pt))
 
     # Create a grid of positions on a unit sphere
-    phis, thetas = np.mgrid[0:180:300j, 0:360:600j] # outputs are reversed rel to args
+    thetas, phis = np.mgrid[0:180:100j, 0:360:100j] # outputs are reversed rel to args?
     rs = np.full_like(thetas, 1)
 
     # convert to cartesian coords
@@ -63,3 +63,22 @@ if __name__ == '__main__':
     m = np.arange(NPIX)
     hp.mollview(m, nest=True, title="Mollview image NESTED")
     plt.savefig('moll.png')
+
+    #data = np.arange(10)
+    data = np.arange(len(phis))
+    #theta = np.radians(np.arange(10, 110, 10))
+    #phi = np.radians(np.linspace(0, 100, 10))
+    theta = thetas
+    phi = phis
+    #print(data)
+    #print(theta)
+    print(phi)
+    nside = 10
+    print(np.degrees(hp.nside2resol(nside)))
+    pixel_indices = hp.ang2pix(nside, theta, phi)
+    print(pixel_indices)
+    m = np.zeros(hp.nside2npix(nside))
+    m[pixel_indices] = data
+    hp.mollview(m)
+    plt.savefig('map.png')
+    #import pdb; pdb.set_trace()
