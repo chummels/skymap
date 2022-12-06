@@ -40,9 +40,23 @@ if __name__ == '__main__':
     #    print(cart2sphA(pt))
 
     # Create a grid of positions on a unit sphere
-    thetas, phis = np.mgrid[0:180:100j, 0:360:100j] # outputs are reversed rel to args?
-    rs = np.full_like(thetas, 1)
+    #thetas, phis = np.mgrid[0:180:20j, 0:360:20j] # outputs are reversed rel to args?
 
+    n_degrees = 10
+    n_theta = int(180/n_degrees)
+    n_phi = int(360/n_degrees)
+    theta = np.linspace(0, 180, n_theta, endpoint=False)
+    phi = np.linspace(0, 360, n_phi, endpoint=False)
+    thetas = np.empty([n_theta, n_phi])
+    phis = np.empty([n_theta, n_phi])
+    for i,t in enumerate(theta):
+        for j,p in enumerate(phi):
+            thetas[i,j] = t
+            phis[i,j] = p
+    thetas = thetas.ravel()
+    phis = phis.ravel()
+    rs = np.full_like(thetas, 1)
+    
     # convert to cartesian coords
     phis = np.radians(phis)
     thetas = np.radians(thetas)
@@ -73,7 +87,7 @@ if __name__ == '__main__':
     #print(data)
     #print(theta)
     print(phi)
-    nside = 10
+    nside = 2
     print(np.degrees(hp.nside2resol(nside)))
     pixel_indices = hp.ang2pix(nside, theta, phi)
     print(pixel_indices)
