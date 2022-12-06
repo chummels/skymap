@@ -48,6 +48,7 @@ if __name__ == '__main__':
     thetas = np.radians(thetas)
     xs, ys, zs = sph2cart(phis, thetas, rs)
 
+    # plot contours of unit sphere in cartesian space, just to confirm working.
     if test:
         zs = np.abs(zs)
         h = plt.contourf(xs, ys, zs)
@@ -55,4 +56,10 @@ if __name__ == '__main__':
         plt.colorbar()
         plt.savefig('test.png')
 
-    # make aitoff projection
+    # make mollweide projection
+    NSIDE = 2
+    NPIX = hp.nside2npix(NSIDE)
+    print(NPIX)
+    m = np.arange(NPIX)
+    hp.mollview(m, nest=True, title="Mollview image NESTED")
+    plt.savefig('moll.png')
