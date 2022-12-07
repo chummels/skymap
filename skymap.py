@@ -2,7 +2,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 import yt
 import healpy as hp
-from unyt import kpc
+from unyt import kpc, cm
 from yt.utilities.math_utils import ortho_find
 
 def sph2cart(az, el, r):
@@ -48,7 +48,7 @@ def calc_pixel(ds, field, start, end, length):
     Field value is just column density = sum(number density * path length)
     """
     ray = ds.r[start:end]
-    return (ray[field] * ray['dts'] * length).sum()
+    return (ray[field] * ray['dts'].v * length).sum()
 
 def vector_length(start, end):
     """
@@ -58,15 +58,15 @@ def vector_length(start, end):
     
 if __name__ == '__main__':
 
-    #fn = '/Users/chummels/src/yt-data/FIRE_M12i_ref11/snapshot_600.hdf5'
-    fn = '/Users/chummels/scratch/FIRE/m12i_res57000/output/snapshot_570.hdf5'
+    fn = '/Users/chummels/src/yt-data/FIRE_M12i_ref11/snapshot_600.hdf5'
+    #fn = '/Users/chummels/scratch/FIRE/m12i_res57000/output/snapshot_570.hdf5'
     ds = yt.load(fn)
 
     # define center and angular momentum vector
     _, center = ds.find_max(('gas', 'density'))
     sp = ds.sphere(center, (10, 'kpc'))
-    #L = sp.quantities.angular_momentum_vector()
-    #L, E1, E2 = ortho_find(L)
+    L = sp.quantities.angular_momentum_vector()
+    L, E1, E2 = ortho_find(L)
 
     # origin = solar location ~ 10 kpc out from center in disk
     #offset = E1 * 10 * kpc
@@ -74,9 +74,10 @@ if __name__ == '__main__':
     origin.convert_to_units('kpc')
     #origin = center + offset
 
-    n_side = 1
+    n_side = 4
     radius = 10 * kpc
-    field = ('gas', 'H_p0_number_density')
+    #field = ('gas', 'H_p0_number_density')
+    field = ('gas', 'El_number_density')
 
     xs, ys, zs = get_cart_coords(n_side, radius, origin)
     n_pix = len(xs)
@@ -84,12 +85,19 @@ if __name__ == '__main__':
     for i in range(n_pix):
         end = ds.arr([xs[i], ys[i], zs[i]], 'kpc')
         print('%04i Start: %s End: %s' % (i, origin, end))
-        DMs[i] = calc_pixel(ds, field, origin, end, radius)
-        print('Column: %s' % DMs[i])
+        #DMs[i] = calc_pixel(ds, field, origin, end, radius)
+        DM = calc_pixel(ds, field, origin, end, radius)
+        print('Column: %s' % DM.to('pc/cm**3'))
+        DMs[i] = DM
     res = np.degrees(hp.nside2resol(n_side))
-    hp.mollview(DMs, title="Angular Size: %.1f" % res, unit='$cm^{-2}$', norm='log')
+    DMs /= cm**2
+    DMs.convert_to_units('pc/cm**3')
+    hp.mollview(DMs, title="Angular Size: %.1f" % res, unit='DM [pc cm$^{-3}$]', norm='log')
     plt.savefig('map.png')
 
-    #sp2 = ds.sphere(origin, radius)
-    #p = yt.OffAxisProjectionPlot(ds, E1, field, north_vector=L, center=origin, width=2.5*radius, data_source=sp2)
-    #p.save('projection.png')
+    sp2 = ds.sphere(origin, radius)
+    p = yt.OffAxisProjectionPlot(ds, E1, field, north_vector=L, center=origin, 
+                                 width=2.5*radius, data_source=sp2)
+    p.set_unit(field, 'pc/cm**3')
+    p.set_zlim(field, 1e0, 1e3)
+    p.save('projection.png')
