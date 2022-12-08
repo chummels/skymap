@@ -47,15 +47,8 @@ def calc_pixel(ds, field, start, end, length):
 
     Field value is just column density = sum(number density * path length)
     """
-    ray = ds.r[start:end]
-    return (ray[field] * ray['dts'].v * length).sum()
+    return np.sum(ds.r[start:end][field] * ds.r[start:end:]['dts'].d * length)
 
-def vector_length(start, end):
-    """
-    Length of a vector from start to end
-    """
-    return np.sqrt(np.power((end - start), 2).sum())
-    
 if __name__ == '__main__':
 
     fn = '/Users/chummels/src/yt-data/FIRE_M12i_ref11/snapshot_600.hdf5'
@@ -65,8 +58,8 @@ if __name__ == '__main__':
     # define center and angular momentum vector
     _, center = ds.find_max(('gas', 'density'))
     sp = ds.sphere(center, (10, 'kpc'))
-    L = sp.quantities.angular_momentum_vector()
-    L, E1, E2 = ortho_find(L)
+    #L = sp.quantities.angular_momentum_vector()
+    #L, E1, E2 = ortho_find(L)
 
     # origin = solar location ~ 10 kpc out from center in disk
     #offset = E1 * 10 * kpc
@@ -74,6 +67,7 @@ if __name__ == '__main__':
     origin.convert_to_units('kpc')
     #origin = center + offset
 
+    # define basics of projection
     n_side = 4
     radius = 10 * kpc
     #field = ('gas', 'H_p0_number_density')
@@ -81,23 +75,28 @@ if __name__ == '__main__':
 
     xs, ys, zs = get_cart_coords(n_side, radius, origin)
     n_pix = len(xs)
+    print("%i pixels" % n_pix)
     DMs = np.empty(n_pix)
     for i in range(n_pix):
         end = ds.arr([xs[i], ys[i], zs[i]], 'kpc')
-        print('%04i Start: %s End: %s' % (i, origin, end))
-        #DMs[i] = calc_pixel(ds, field, origin, end, radius)
-        DM = calc_pixel(ds, field, origin, end, radius)
-        print('Column: %s' % DM.to('pc/cm**3'))
-        DMs[i] = DM
+        #print('%04i' % i)
+        DMs[i] = calc_pixel(ds, field, origin, end, radius)
     res = np.degrees(hp.nside2resol(n_side))
     DMs /= cm**2
     DMs.convert_to_units('pc/cm**3')
     hp.mollview(DMs, title="Angular Size: %.1f" % res, unit='DM [pc cm$^{-3}$]', norm='log')
     plt.savefig('map.png')
 
-    sp2 = ds.sphere(origin, radius)
-    p = yt.OffAxisProjectionPlot(ds, E1, field, north_vector=L, center=origin, 
-                                 width=2.5*radius, data_source=sp2)
-    p.set_unit(field, 'pc/cm**3')
-    p.set_zlim(field, 1e0, 1e3)
-    p.save('projection.png')
+    #sp2 = ds.sphere(origin, radius)
+    #p = yt.OffAxisProjectionPlot(ds, E1, field, north_vector=L, center=origin, 
+    #                             width=2.5*radius, data_source=sp2)
+    #p.set_unit(field, 'pc/cm**3')
+    #p.set_zlim(field, 1e0, 1e3)
+    #p.save('projection.png')
+
+    # rotate so plane aligns with plane of mollweide
+    # vectorize ray calculations
+    # use existing cython routines for ray calculations?
+    # offset to solar position
+    # run at higher res
+    # investigate zack's code for speed clues
