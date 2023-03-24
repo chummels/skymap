@@ -4,6 +4,7 @@ import yt
 import healpy as hp
 from unyt import kpc, cm
 from yt.utilities.math_utils import ortho_find
+from tqdm import tqdm
 
 def sph2cart(az, el, r):
     rcos_theta = r * np.cos(el)
@@ -49,6 +50,12 @@ def calc_pixel(ds, field, start, end, length):
     """
     return np.sum(ds.r[start:end][field] * ds.r[start:end:]['dts'].d * length)
 
+def calc_pixels(ds, field, start, ends, length):
+    """
+    Vectorizing pixel calculations
+    """
+    return np.sum(ds.r[start:end][field] * ds.r[start:end:]['dts'].d * length, axis=1)
+
 if __name__ == '__main__':
 
     fn = '/Users/chummels/src/yt-data/FIRE_M12i_ref11/snapshot_600.hdf5'
@@ -77,10 +84,10 @@ if __name__ == '__main__':
     n_pix = len(xs)
     print("%i pixels" % n_pix)
     DMs = np.empty(n_pix)
-    for i in range(n_pix):
+    for i in tqdm(range(n_pix), "Generating Pixels"):
         end = ds.arr([xs[i], ys[i], zs[i]], 'kpc')
-        #print('%04i' % i)
         DMs[i] = calc_pixel(ds, field, origin, end, radius)
+    #DMs[i] = calc_pixel(ds, field, origin, end, radius)
     res = np.degrees(hp.nside2resol(n_side))
     DMs /= cm**2
     DMs.convert_to_units('pc/cm**3')
