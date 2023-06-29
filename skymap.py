@@ -48,13 +48,9 @@ def calc_pixel(ds, field, start, end, length):
 
     Field value is just column density = sum(number density * path length)
     """
-    return np.sum(ds.r[start:end][field] * ds.r[start:end:]['dts'].d * length)
-
-def calc_pixels(ds, field, start, ends, length):
-    """
-    Vectorizing pixel calculations
-    """
-    return np.sum(ds.r[start:end][field] * ds.r[start:end:]['dts'].d * length, axis=1)
+    ray = ds.r[start:end]
+    return np.sum(ray[field] * ray['dts'].d * length)
+    #return np.sum(ds.r[start:end][field] * ds.r[start:end]['dts'].d * length)
 
 if __name__ == '__main__':
 
@@ -65,8 +61,8 @@ if __name__ == '__main__':
     # define center and angular momentum vector
     _, center = ds.find_max(('gas', 'density'))
     sp = ds.sphere(center, (10, 'kpc'))
-    #L = sp.quantities.angular_momentum_vector()
-    #L, E1, E2 = ortho_find(L)
+    L = sp.quantities.angular_momentum_vector()
+    L, E1, E2 = ortho_find(L)
 
     # origin = solar location ~ 10 kpc out from center in disk
     #offset = E1 * 10 * kpc
@@ -75,10 +71,10 @@ if __name__ == '__main__':
     #origin = center + offset
 
     # define basics of projection
-    n_side = 4
+    n_side = 20
     radius = 10 * kpc
-    #field = ('gas', 'H_p0_number_density')
-    field = ('gas', 'El_number_density')
+    field = ('gas', 'H_p0_number_density')
+    #field = ('gas', 'El_number_density')
 
     xs, ys, zs = get_cart_coords(n_side, radius, origin)
     n_pix = len(xs)
@@ -87,16 +83,22 @@ if __name__ == '__main__':
     for i in tqdm(range(n_pix), "Generating Pixels"):
         end = ds.arr([xs[i], ys[i], zs[i]], 'kpc')
         DMs[i] = calc_pixel(ds, field, origin, end, radius)
-    #DMs[i] = calc_pixel(ds, field, origin, end, radius)
+    #import cProfile
+    #cProfile.runctx("calc_pixel(ds, field, origin, end, radius)", globals(), locals())
+
     res = np.degrees(hp.nside2resol(n_side))
-    DMs /= cm**2
-    DMs.convert_to_units('pc/cm**3')
-    hp.mollview(DMs, title="Angular Size: %.1f" % res, unit='DM [pc cm$^{-3}$]', norm='log')
-    plt.savefig('map.png')
+    #DMs /= cm**2
+    #DMs.convert_to_units('pc/cm**3')
+    #hp.mollview(DMs, title="Angular Size: %.1f" % res, unit='DM [pc cm$^{-3}$]', norm='log')
+    hp.mollview(DMs, title="Angular Size: %.1f" % res, unit='HI Column Density [cm$^{-2}$]', norm='log')
+    plt.savefig('map_%02d.png' % n_side)
 
     #sp2 = ds.sphere(origin, radius)
     #p = yt.OffAxisProjectionPlot(ds, E1, field, north_vector=L, center=origin, 
     #                             width=2.5*radius, data_source=sp2)
+
+    #p.set_zlim(field, 1e15, 1e23)
+
     #p.set_unit(field, 'pc/cm**3')
     #p.set_zlim(field, 1e0, 1e3)
     #p.save('projection.png')
@@ -107,3 +109,9 @@ if __name__ == '__main__':
     # offset to solar position
     # run at higher res
     # investigate zack's code for speed clues
+
+    # confirm behavior with cool gas content to ensure disk is aligned with mollweide projection
+    # rotate so plane aligns with plane of mollweide
+    # filter simulation to deal with data_source of sphere around galaxy instead of whole sim box
+
+
