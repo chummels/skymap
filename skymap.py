@@ -72,12 +72,20 @@ if __name__ == '__main__':
     #origin = center + offset
 
     # define basics of projection
-    n_side = 20
+    n_side = 5
     radius = 10 * kpc
     field = ('gas', 'H_p0_number_density')
     #field = ('gas', 'El_number_density')
 
     xs, ys, zs = get_cart_coords(n_side, radius, origin)
+    # rotate the healpy coords to align with the edge-on disk
+    #CoM = np.array([0, 0, 0])
+    #L = np.array([0, 0, 1])
+    #P = np.array([[1, 0, 0], [1, 1, 1], [0, 0, 1], [1, 1, 0]])
+    #V = np.array([[0, 1, 10], [-1, -1, -1], [1, 1, 1], [1, -1, -1]])
+    #cyl_r = compute_cylindrical_radius(CoM, L, P, V)
+    #cyl_r
+
     n_pix = len(xs)
     print("%i pixels" % n_pix)
     DMs = np.empty(n_pix)
